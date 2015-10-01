@@ -36,7 +36,8 @@ public class HMM {
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
       for (int j = 0; j < numberOfStates; ++j) {      
-        this.A[i][j] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+        double randAdd = 0.01 * rand.nextDouble();
+        this.A[i][j] = (double) (1/(numberOfStates + randAdd));
         if (j == numberOfStates - 1) {
           this.A[i][j] = 1 - rowSum;
         } else {
@@ -47,8 +48,10 @@ public class HMM {
     }
     
     for (int i = 0; i < numberOfStates; ++i) {
+      rowSum = 0;
       for (int j = 0; j < numberOfEmissions; ++j) {
-        this.B[i][j] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+        double randAdd = 0.01 * rand.nextDouble();
+        this.B[i][j] = (double) (1/(numberOfEmissions + randAdd));
         if (j == numberOfEmissions - 1) {
           this.B[i][j] = 1 - rowSum;
         } else {
@@ -57,9 +60,11 @@ public class HMM {
         panic(B, "B");
       }
     }
-    
+
+    rowSum = 0;
     for (int i = 0; i < numberOfStates; ++i) {
-      this.pi[i] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+      double randAdd = 0.01 * rand.nextDouble();
+      this.pi[i] = (double) (1/(numberOfStates + randAdd));
         if (i == numberOfStates - 1) {
           this.pi[i] = 1 - rowSum;
         } else {
@@ -120,20 +125,15 @@ public class HMM {
     double[][] stateDist = new double[numberOfStates][numberOfStates];
     stateDist = powerMatrix(A, t);
 
-    double[][] currStateDist = new double[1][numberOfStates];
-    double[][] pi2d = new double[1][numberOfStates];
+    double[] currStateDist = new double[numberOfStates];
 
-    for (int i = 0; i < numberOfStates; i++) {
-      pi2d[0][i] = pi[i];
-    }
-
-    currStateDist = multiplyMatrices(pi2d, stateDist);
-
+    currStateDist = multiply1DMatrixBy2Dmatrix(pi, stateDist);
+    
     panic(currStateDist, "currStateDist");
 
     double rowSum = 0;
-    for (int i = 0; i < currStateDist[0].length; i++) {
-      rowSum += currStateDist[0][i];
+    for (int i = 0; i < currStateDist.length; i++) {
+      rowSum += currStateDist[i];
     }
 
     if (Math.abs(rowSum - 1) > 0.001) {
@@ -145,10 +145,10 @@ public class HMM {
       printMatrix(pi);
       System.err.println("A^t * pi");
       printMatrix(currStateDist);
-      System.err.printf("Row sum: %.5f\n", rowSum);
+      System.err.printf("Row sum: %.8f\n", rowSum);
       System.exit(1);
     }
-    return stateDist[0];
+    return currStateDist;
   }
 
   double[][] multiplyMatrices(double[][] a, double[][] b) {
@@ -162,6 +162,18 @@ public class HMM {
     }
 
     panic(res, "multiplyMatrices");
+
+    return res;
+  }
+
+  double[] multiply1DMatrixBy2Dmatrix(double[] a, double[][] b) {
+    double[] res = new double[a.length];
+
+    for (int i = 0; i < b.length; i++) {
+      for (int j = 0; j < a.length; j++) {
+        res[i] += a[j] * b[j][i];
+      }
+    }
 
     return res;
   }
