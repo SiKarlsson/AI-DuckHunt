@@ -1,3 +1,6 @@
+import java.util.*;
+import java.lang.Math;
+
 /**
  * Represents a HMM.
  *
@@ -26,21 +29,43 @@ public class HMM {
     this.A = new double[numberOfStates][numberOfStates];
     this.B = new double[numberOfStates][numberOfEmissions];
     this.pi = new double[numberOfStates];
+
+    Random rand = new Random();
+    double rowSum = 0;
     
     for (int i = 0; i < numberOfStates; ++i) {
+      rowSum = 0;
       for (int j = 0; j < numberOfStates; ++j) {      
-        this.A[i][j] = 0;
+        this.A[i][j] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+        if (j == numberOfStates - 1) {
+          this.A[i][j] = 1 - rowSum;
+        } else {
+          rowSum += this.A[i][j];
+        }
+        panic(A, "A");
       }
     }
     
     for (int i = 0; i < numberOfStates; ++i) {
       for (int j = 0; j < numberOfEmissions; ++j) {
-        this.B[i][j] = 0;
+        this.B[i][j] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+        if (j == numberOfEmissions - 1) {
+          this.B[i][j] = 1 - rowSum;
+        } else {
+          rowSum += this.B[i][j];
+        }
+        panic(B, "B");
       }
     }
     
     for (int i = 0; i < numberOfStates; ++i) {
-      this.pi[i] = 0;
+      this.pi[i] = (double) (1/numberOfStates + 0.01 * rand.nextDouble());
+        if (i == numberOfStates - 1) {
+          this.pi[i] = 1 - rowSum;
+        } else {
+          rowSum += this.pi[i];
+        }
+        panic(this.pi, "pi");
     }
   }
 
@@ -91,6 +116,106 @@ public class HMM {
     return probabilityOfMoves;
   }
 
+  double[] getCurrentStateDistribution(int t) {
+    double[][] stateDist = new double[numberOfStates][numberOfStates];
+    stateDist = powerMatrix(A, t);
+
+    double[][] currStateDist = new double[1][numberOfStates];
+    double[][] pi2d = new double[1][numberOfStates];
+
+    for (int i = 0; i < numberOfStates; i++) {
+      pi2d[0][i] = pi[i];
+    }
+
+    currStateDist = multiplyMatrices(pi2d, stateDist);
+
+    panic(currStateDist, "currStateDist");
+
+    double rowSum = 0;
+    for (int i = 0; i < currStateDist[0].length; i++) {
+      rowSum += currStateDist[0][i];
+    }
+
+    if (Math.abs(rowSum - 1) > 0.001) {
+      System.err.println("A (Transition matrix)");
+      printMatrix(A);
+      System.err.println("A^t State distribution at time t: ");
+      printMatrix(stateDist);
+      System.err.println("Initial distribution");
+      printMatrix(pi);
+      System.err.println("A^t * pi");
+      printMatrix(currStateDist);
+      System.err.printf("Row sum: %.5f\n", rowSum);
+      System.exit(1);
+    }
+    return stateDist[0];
+  }
+
+  double[][] multiplyMatrices(double[][] a, double[][] b) {
+    double[][] res = new double[a.length][b.length];
+    for (int i = 0; i < a.length; i++) {
+      for (int j = 0; j < b[i].length; j++) {
+        for (int k = 0; k < a.length; k++) {
+          res[i][j] += a[i][k] * b[k][j];
+        }
+      }
+    }
+
+    panic(res, "multiplyMatrices");
+
+    return res;
+  }
+
+  double[][] powerMatrix (double[][] a, int p) {
+    double[][] result = a;
+    for (int n = 1; n < p; ++ n)
+        result = multiplyMatrices(result, a);
+
+    panic(result, "powerMatrix");
+    return result;
+  }
+
+  void panic(double[][] a, String varName) {
+    for (int i = 0; i < a.length; i++) {
+      for (int j = 0; j < a[i].length; j++) {
+        if (a[i][j] < 0 || a[i][j] > 1) {
+          System.err.printf("%s: Probability is under 0 or over 1!!!!!!!!\n", varName);
+          //System.exit(1);
+        }
+      }
+    }
+  }
+
+  void panic(double[] a, String varName) {
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] < 0 || a[i] > 1) {
+        System.err.printf("%s: Probability is under 0 or over 1!!!!!!!!\n", varName);
+        System.exit(1);
+      }
+    }
+  }
+
+  void printMatrix(double[][] m) {
+    System.err.printf("[");
+    for (int i = 0; i < m.length; i++) {
+      for (int j = 0; j < m[i].length; j++) {
+        System.err.printf("%.2f", m[i][j]);
+        if (j < m[i].length - 1) System.err.printf(" ");
+      }
+      if (i < m[i].length - 1) System.err.printf("\n");
+    }
+    System.err.printf("]\n");
+  }
+
+  void printMatrix(double[] m) {
+    System.err.printf("[");
+    for (int i = 0; i < m.length; i++) {
+      System.err.printf("%.2f", m[i]);
+      if (i < m.length - 1) System.err.printf(" ");
+    }
+    System.err.printf("]\n");
+  }
+
   /**
    * Estimates the probability of a sequence of observed emissions, assuming
    * this HMM.
@@ -120,6 +245,19 @@ public class HMM {
     }
     return probability;
   }
+
+  public double[][] stateDistPow(int p) {
+    double[][] result = new double[numberOfStates][numberOfStates];
+    for (int k = 0; k < p; k++) {
+      for (int i = 0; i < numberOfStates; i++) {
+        for (int j = 0; j < numberOfStates; j++) {
+          result[i][j] = B[i][j] * B[j][i];
+        }
+      }
+    }
+
+    return result
+;  }
   
   /**
    * Estimates the hidden states from which a sequence of emissions were

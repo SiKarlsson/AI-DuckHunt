@@ -25,11 +25,49 @@ class Player {
          * This skeleton never shoots.
          */
 
-        // This line chooses not to shoot.
-        return cDontShoot;
+        int numOfBirds = pState.getNumBirds();
+        int numOfStates = 10;
+        int t = 90; // When to start shooting
 
-        // This line would predict that bird 0 will move right and shoot at it.
-        // return Action(0, MOVE_RIGHT);
+        int bestBird = 0; // What bird should we shoot?
+        double bestBirdProb = 0; // ... and what prob that we hit?
+        int bestAction = -1; // 
+
+        for (int b = 0; b < numOfBirds; b++) {
+            Bird currBird = pState.getBird(b);
+            if (currBird.getSeqLength() > t && !currBird.isDead()) {
+
+                HMM hmm = new HMM(numOfStates, Constants.COUNT_MOVE);
+
+                int[] o = new int[currBird.getSeqLength()];
+
+                for (int i = 0; i < currBird.getSeqLength(); i++) {
+                    o[i] = currBird.getObservation(i);
+                }
+
+                hmm.estimateModel(o);
+
+                double[] stateDist = hmm.getCurrentStateDistribution(t);
+
+                double[] nextEmission = hmm.estimateProbabilityDistributionOfNextEmission(stateDist);
+
+                for (int i = 0; i < Constants.COUNT_MOVE; i++) {
+                    if (nextEmission[i] > bestBirdProb) {
+                        bestBirdProb = nextEmission[i];
+                        bestAction = i;
+                        bestBird = b;
+                    }
+                }
+            }
+        }
+        // This line chooses not to shoot.
+        //return cDontShoot;
+        if (bestBirdProb > 0.6) {
+            System.err.printf("Shooting bird (Action: %d) %d with prob %.5f\n", bestAction, bestBird, bestBirdProb);
+            return new Action(bestBird, bestAction);
+        } else {
+            return cDontShoot;
+        }
     }
 
     /**
