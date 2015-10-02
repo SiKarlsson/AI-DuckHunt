@@ -49,6 +49,31 @@ class Player {
                 // Observations
                 int[] o = getObservationSequence(bird);
 
+                if (pState.getRound() > 0) {
+                    int species = -1;
+                    double bestProb = 0;
+
+                    for (int j = 0; j < Constants.COUNT_SPECIES; j++) {
+                        // Get all HMMs we have for species j
+                        LinkedList<HMM> hmmList = speciesHMM.get(j);
+                        // Iterate through all hmms for a specific species
+                        for (HMM hmmIter : hmmList) {
+                            if (hmmIter != null) {
+                                double prob = Math.abs(Math.log(hmmIter.estimateProbabilityOfEmissionSequence(o)));
+                                if (prob < Integer.MAX_VALUE && prob > bestProb) {
+                                    //System.err.printf("Found a better guess for %d: %d\n", i, j);
+                                    bestProb = prob;
+                                    species = j;
+                                }
+                            }
+                        }
+                    }
+
+                    if (speciesHMM.get(species) != null && speciesHMM.get(species).getLast() != null && speciesHMM.get(species).size() > 0) {
+                        hmm.copyHMM(speciesHMM.get(species).getLast());
+                    }
+                }
+
                 hmm.estimateModel(o);
 
                 roundHMMs.put(b, hmm);
@@ -81,7 +106,7 @@ class Player {
             }
         }
 
-        if (bestBirdProb > 0.6) {
+        if (bestBirdProb > 0.7) {
             System.err.printf("Shooting bird (Action: %d) %d with prob %.5f\n", bestAction, bestBird, bestBirdProb);
             return new Action(bestBird, bestAction);
         } else {
@@ -113,6 +138,8 @@ class Player {
         for (int i = 0; i < pState.getNumBirds(); ++i) {
             Bird bird = pState.getBird(i);
             if (pState.getRound() == 0) {
+                // First round we know nothing, guess! But don't guess black stork
+                // as it is rare
                 lGuess[i] = rand.nextInt(Constants.COUNT_SPECIES - 1);
             } else {
                 int[] o = getObservationSequence(bird);
@@ -121,7 +148,7 @@ class Player {
                 for (int j = 0; j < Constants.COUNT_SPECIES; j++) {
                     // Get all HMMs we have for species j
                     LinkedList<HMM> hmmList = speciesHMM.get(j);
-                    // Iterate through all 
+                    // Iterate through all hmms for a specific species
                     for (HMM hmm : hmmList) {
                         if (hmm != null) {
                             double prob = Math.abs(Math.log(hmm.estimateProbabilityOfEmissionSequence(o)));
