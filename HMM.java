@@ -154,7 +154,7 @@ public class HMM {
     return currStateDist;
   }
 
-  double[][] multiplyMatrices(double[][] a, double[][] b, int[] o, int t) {
+  double[][] multiplyMatrices(double[][] a, double[][] b) {
     double[][] res = new double[a.length][b.length];
     for (int i = 0; i < a.length; i++) {
       for (int j = 0; j < b[i].length; j++) {
@@ -184,7 +184,7 @@ public class HMM {
   double[][] powerMatrix (double[][] a, int p, int[] o) {
     double[][] result = a;
     for (int n = 1; n < p; ++ n)
-        result = multiplyMatrices(result, a, o, n);
+        result = multiplyMatrices(result, a);
 
     panic(result, "powerMatrix");
     return result;
