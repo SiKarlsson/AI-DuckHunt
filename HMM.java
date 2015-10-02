@@ -32,11 +32,13 @@ public class HMM {
 
     Random rand = new Random();
     double rowSum = 0;
+
+    // Totally random --> normalize
     
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
       for (int j = 0; j < numberOfStates; ++j) {      
-        double randAdd = 0.01 * rand.nextDouble();
+        double randAdd = 0.1 * rand.nextDouble();
         this.A[i][j] = (double) (1/(numberOfStates + randAdd));
         if (j == numberOfStates - 1) {
           this.A[i][j] = 1 - rowSum;
@@ -50,7 +52,7 @@ public class HMM {
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
       for (int j = 0; j < numberOfEmissions; ++j) {
-        double randAdd = 0.01 * rand.nextDouble();
+        double randAdd = 0.1 * rand.nextDouble();
         this.B[i][j] = (double) (1/(numberOfEmissions + randAdd));
         if (j == numberOfEmissions - 1) {
           this.B[i][j] = 1 - rowSum;
@@ -63,7 +65,7 @@ public class HMM {
 
     rowSum = 0;
     for (int i = 0; i < numberOfStates; ++i) {
-      double randAdd = 0.01 * rand.nextDouble();
+      double randAdd = 0.1 * rand.nextDouble();
       this.pi[i] = (double) (1/(numberOfStates + randAdd));
         if (i == numberOfStates - 1) {
           this.pi[i] = 1 - rowSum;
@@ -121,14 +123,15 @@ public class HMM {
     return probabilityOfMoves;
   }
 
-  double[] getCurrentStateDistribution(int t) {
+  double[] getCurrentStateDistribution(int t, int[] o) {
+    /* DET HÄR ÄR FEL, MÅSTE TA HÄNSYN TILL OBSERVATIONERNA */
     double[][] stateDist = new double[numberOfStates][numberOfStates];
-    stateDist = powerMatrix(A, t);
+    stateDist = powerMatrix(A, t, o);
 
     double[] currStateDist = new double[numberOfStates];
 
     currStateDist = multiply1DMatrixBy2Dmatrix(pi, stateDist);
-    
+
     panic(currStateDist, "currStateDist");
 
     double rowSum = 0;
@@ -151,7 +154,7 @@ public class HMM {
     return currStateDist;
   }
 
-  double[][] multiplyMatrices(double[][] a, double[][] b) {
+  double[][] multiplyMatrices(double[][] a, double[][] b, int[] o, int t) {
     double[][] res = new double[a.length][b.length];
     for (int i = 0; i < a.length; i++) {
       for (int j = 0; j < b[i].length; j++) {
@@ -178,10 +181,10 @@ public class HMM {
     return res;
   }
 
-  double[][] powerMatrix (double[][] a, int p) {
+  double[][] powerMatrix (double[][] a, int p, int[] o) {
     double[][] result = a;
     for (int n = 1; n < p; ++ n)
-        result = multiplyMatrices(result, a);
+        result = multiplyMatrices(result, a, o, n);
 
     panic(result, "powerMatrix");
     return result;
@@ -192,7 +195,8 @@ public class HMM {
       for (int j = 0; j < a[i].length; j++) {
         if (a[i][j] < 0 || a[i][j] > 1) {
           System.err.printf("%s: Probability is under 0 or over 1!!!!!!!!\n", varName);
-          //System.exit(1);
+          printMatrix(a);
+          System.exit(1);
         }
       }
     }
@@ -268,8 +272,8 @@ public class HMM {
       }
     }
 
-    return result
-;  }
+    return result;
+  }
   
   /**
    * Estimates the hidden states from which a sequence of emissions were
@@ -569,5 +573,4 @@ public class HMM {
       }
     }
   }
-  
 }
