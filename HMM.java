@@ -10,7 +10,7 @@ import java.lang.Math;
  * We recommend that you read the article as an introduction to HMMs.
  */
 public class HMM {
-  static final int maxIters = 30; // Max iterations when estimating a new model.
+  static final int maxIters = 300; // Max iterations when estimating a new model.
   
   final int numberOfStates; // The number of states in the HMM.
   final int numberOfEmissions; // The number of emissions in the HMM.
@@ -123,8 +123,64 @@ public class HMM {
     return probabilityOfMoves;
   }
 
-  double[] getCurrentStateDistribution(int t, int[] o) {
+  double[] getCurrentStateDistribution(int[] O) {
     /* DET HÄR ÄR FEL, MÅSTE TA HÄNSYN TILL OBSERVATIONERNA */
+    double[][][] xi = new double[O.length][numberOfStates][numberOfStates];
+    double[][] alpha = new double[O.length][numberOfStates];
+    double[][] beta = new double[O.length][numberOfStates];
+    double[][] gamma = new double[O.length][numberOfStates];
+
+    double[] C = new double[O.length]; // A scaling factor
+    double numer; // A temporary variable for holding a numerator
+    double denom; // A temporary variable for holding a denominator
+
+    /* Iteration-related stuff */
+    double oldLogProb = -Double.MAX_VALUE;
+    int iters = 0;
+    double logProb;
+    boolean finished = false;
+
+    while(!finished && iters < maxIters){
+      /* Computation of alpha */
+
+      C[0]=0.0;
+      for (int i = 0; i < numberOfStates; ++i) {
+        alpha[0][i]=pi[i]*B[i][O[0]];
+        C[0] += alpha[0][i];
+      }
+      
+      if (C[0] != 0){
+        C[0] = 1.0/C[0];
+      }
+      for (int i = 0; i < numberOfStates; ++i) {
+        alpha[0][i]=C[0]*alpha[0][i];
+      }
+
+      for (int t = 1; t < O.length; ++t) {
+        C[t]=0.0;
+        for (int i = 0; i < numberOfStates; ++i) {
+          alpha[t][i] = 0.0;
+          for (int j = 0; j < numberOfStates; ++j) {
+            alpha[t][i] += alpha[(t-1)][j]*A[j][i];
+          }
+          alpha[t][i]=alpha[t][i]*B[i][O[t]];
+          C[t] += alpha[t][i];
+        }
+        
+        if (C[t] != 0){
+          C[t] = 1.0/C[t];
+        }
+        for (int i = 0; i < numberOfStates; ++i) {
+          alpha[t][i]=C[t]*alpha[t][i];
+        } 
+      }
+
+      iters++;
+    }
+
+    return alpha[alpha.length - 2];
+
+      /*
     double[][] stateDist = new double[numberOfStates][numberOfStates];
     stateDist = powerMatrix(A, t, o);
 
@@ -151,7 +207,7 @@ public class HMM {
       System.err.printf("Row sum: %.8f\n", rowSum);
       System.exit(1);
     }
-    return currStateDist;
+    return currStateDist;*/
   }
 
   double[][] multiplyMatrices(double[][] a, double[][] b) {

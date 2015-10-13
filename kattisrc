@@ -1,0 +1,12 @@
+# Please save this file as .kattisrc in your home directory.
+# This file includes a secret token that allows you to log in.
+# DO NOT SHARE IT WITH ANYONE ELSE.
+# If someone gets access to this token, please revoke it by changing your KATTIS password.
+
+[user]
+username: marcus-nordberg
+token: 0a5058fef2017afa778d725b21e491685fb43f8e15c839b12e78b3f2038f9648
+
+[kattis]
+loginurl: https://kth.kattis.com/login
+submissionurl: https://kth.kattis.com/submit
