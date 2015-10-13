@@ -10,7 +10,7 @@ import java.lang.Math;
  * We recommend that you read the article as an introduction to HMMs.
  */
 public class HMM {
-  static final int maxIters = 300; // Max iterations when estimating a new model.
+  static final int maxIters = 30; // Max iterations when estimating a new model.
   
   final int numberOfStates; // The number of states in the HMM.
   final int numberOfEmissions; // The number of emissions in the HMM.
@@ -20,10 +20,7 @@ public class HMM {
   double[] pi; // The initial state distribution of the HMM.
 
   public HMM(int numberOfStates, int numberOfEmissions) {
-    /**
-     * This constructor just sets everything to zero (why is this wrong?).
-     * Write a clever way to initialize the HMM!
-     */
+
     this.numberOfStates = numberOfStates;
     this.numberOfEmissions = numberOfEmissions;
     this.A = new double[numberOfStates][numberOfStates];
@@ -32,8 +29,6 @@ public class HMM {
 
     Random rand = new Random();
     double rowSum = 0;
-
-    // Totally random --> normalize
     
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
