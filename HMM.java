@@ -47,7 +47,7 @@ public class HMM {
       rowSum = 0;
       for (int j = 3; j < 6; ++j) {
         this.B[i][j] = (double) rand.nextDouble();
-        rowSum += this.A[i][j];
+        rowSum += this.B[i][j];
       }
       for (int j = 3; j < 6; ++j) {
         this.B[i][j] /= rowSum;
