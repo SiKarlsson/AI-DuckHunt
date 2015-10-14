@@ -1,7 +1,7 @@
 import java.util.*;
 class Player {
 
-    LinkedList<HMM> speciesHMM; // bucket of hmms for each species
+    LinkedList<HMM> speciesHMM; // bucket of hmms 
 
     private static final int FLATLANDS_MOVES = Constants.COUNT_MOVE;
 
@@ -36,6 +36,9 @@ class Player {
         int bestBird = 0; // What bird should we shoot?
         double bestBirdProb = 0; // ... and what prob that we hit?
         int bestAction = -1; // Don't shoot if no good action has been found
+        HMM bestHMM = null;
+
+        LinkedList<HMM> roundHMMs = new LinkedList<HMM>();
 
         for (int b = 0; b < numOfBirds; b++) {
             Bird bird = pState.getBird(b);
@@ -44,7 +47,8 @@ class Player {
                 HMM hmm = new HMM(numOfStates, Constants.COUNT_MOVE);
 
                 if (speciesHMM.size() > 0) {
-                    hmm.copyHMM(speciesHMM.getLast());
+                    if (speciesHMM.getLast() != null)
+                        hmm.copyHMM(speciesHMM.getLast());
                 }
 
                 // Observations
@@ -52,14 +56,14 @@ class Player {
 
                 hmm.estimateModel(o);
 
-                speciesHMM.add(hmm);
+                if (b == 0) {
+                    bestHMM = hmm;
+                }
 
-                int[] stateSeq = hmm.estimateStateSequence(o);
+                roundHMMs.add(hmm);
 
-                int lastState = stateSeq[stateSeq.length - 1];
+                double[] stateDist = hmm.getCurrentStateDistribution(o);
 
-                double[] stateDist;
-                stateDist = hmm.getCurrentStateDistribution(o);
                 double[] nextEmission = hmm.estimateProbabilityDistributionOfNextEmission(stateDist);
 
                 for (int i = Constants.MOVE_LEFT; i <= Constants.MOVE_RIGHT; i++) {
@@ -67,13 +71,19 @@ class Player {
                         bestBirdProb = nextEmission[i];
                         bestAction = i;
                         bestBird = b;
+                        bestHMM = hmm;
                     }
                 }
             }
         }
 
-        if (bestBirdProb > 0.7) {
-            System.err.printf("Shooting bird (Action: %d) %d with prob %.5f\n", bestAction, bestBird, bestBirdProb);
+        speciesHMM.add(bestHMM);
+ 
+        double shootProb = 0.7;
+
+        if (bestBirdProb > shootProb && pState.getBird(bestBird).getSeqLength() > t) {
+            System.err.printf("Shooting bird (Action: %d) %d with prob %.5f at time %d\n", 
+                bestAction, bestBird, bestBirdProb, t);
             return new Action(bestBird, bestAction);
         } else {
             return cDontShoot;
