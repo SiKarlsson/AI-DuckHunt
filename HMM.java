@@ -33,41 +33,35 @@ public class HMM {
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
       for (int j = 0; j < numberOfStates; ++j) {      
-        double randAdd = 0.1 * rand.nextDouble();
-        this.A[i][j] = (double) (1/(numberOfStates + randAdd));
-        if (j == numberOfStates - 1) {
-          this.A[i][j] = 1 - rowSum;
-        } else {
-          rowSum += this.A[i][j];
-        }
+        this.A[i][j] = (double) rand.nextDouble();
+        rowSum += this.A[i][j];
         panic(A, "A");
+      }
+
+      for (int j = 0; j < numberOfStates; ++j) {      
+        this.A[i][j] /= rowSum;
       }
     }
     
     for (int i = 0; i < numberOfStates; ++i) {
       rowSum = 0;
-      for (int j = 0; j < numberOfEmissions; ++j) {
-        double randAdd = 0.1 * rand.nextDouble();
-        this.B[i][j] = (double) (1/(numberOfEmissions + randAdd));
-        if (j == numberOfEmissions - 1) {
-          this.B[i][j] = 1 - rowSum;
-        } else {
-          rowSum += this.B[i][j];
-        }
-        panic(B, "B");
+      for (int j = 3; j < 6; ++j) {
+        this.B[i][j] = (double) rand.nextDouble();
+        rowSum += this.A[i][j];
+      }
+      for (int j = 3; j < 6; ++j) {
+        this.B[i][j] /= rowSum;
       }
     }
 
     rowSum = 0;
     for (int i = 0; i < numberOfStates; ++i) {
-      double randAdd = 0.1 * rand.nextDouble();
-      this.pi[i] = (double) (1/(numberOfStates + randAdd));
-        if (i == numberOfStates - 1) {
-          this.pi[i] = 1 - rowSum;
-        } else {
-          rowSum += this.pi[i];
-        }
-        panic(this.pi, "pi");
+      this.pi[i] = (double) rand.nextDouble();
+      rowSum += this.pi[i];
+      panic(this.pi, "pi");
+    }
+    for (int i = 0; i < numberOfStates; ++i) {
+      this.pi[i] /= rowSum;
     }
   }
 
@@ -174,35 +168,6 @@ public class HMM {
     }
 
     return alpha[alpha.length - 2];
-
-      /*
-    double[][] stateDist = new double[numberOfStates][numberOfStates];
-    stateDist = powerMatrix(A, t, o);
-
-    double[] currStateDist = new double[numberOfStates];
-
-    currStateDist = multiply1DMatrixBy2Dmatrix(pi, stateDist);
-
-    panic(currStateDist, "currStateDist");
-
-    double rowSum = 0;
-    for (int i = 0; i < currStateDist.length; i++) {
-      rowSum += currStateDist[i];
-    }
-
-    if (Math.abs(rowSum - 1) > 0.001) {
-      System.err.println("A (Transition matrix)");
-      printMatrix(A);
-      System.err.println("A^t State distribution at time t: ");
-      printMatrix(stateDist);
-      System.err.println("Initial distribution");
-      printMatrix(pi);
-      System.err.println("A^t * pi");
-      printMatrix(currStateDist);
-      System.err.printf("Row sum: %.8f\n", rowSum);
-      System.exit(1);
-    }
-    return currStateDist;*/
   }
 
   double[][] multiplyMatrices(double[][] a, double[][] b) {
@@ -478,7 +443,8 @@ public class HMM {
       }
       for (int i = 0; i < numberOfStates; ++i) {
         gamma[O.length-1][i] = 0.0;
-        gamma[O.length-1][i] += (alpha[O.length-1][i]*beta[O.length-1][i])/denom;
+        if (denom != 0) 
+          gamma[O.length-1][i] += (alpha[O.length-1][i]*beta[O.length-1][i])/denom;
       }
       
       /* Re-estimate A,B and pi */
