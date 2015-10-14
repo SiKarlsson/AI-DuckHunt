@@ -31,7 +31,7 @@ class Player {
          */
         int numOfBirds = pState.getNumBirds();
         int numOfStates = 5;
-        int t = 95 - numOfBirds; // When to start shooting
+        int t = 60; // When to start shooting
 
         int bestBird = 0; // What bird should we shoot?
         double bestBirdProb = 0; // ... and what prob that we hit?
