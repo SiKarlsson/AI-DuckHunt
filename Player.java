@@ -36,7 +36,6 @@ class Player {
         int bestBird = 0; // What bird should we shoot?
         double bestBirdProb = 0; // ... and what prob that we hit?
         int bestAction = -1; // Don't shoot if no good action has been found
-        HMM bestHMM = null;
 
         LinkedList<HMM> roundHMMs = new LinkedList<HMM>();
 
@@ -56,10 +55,6 @@ class Player {
 
                 hmm.estimateModel(o);
 
-                if (b == 0) {
-                    bestHMM = hmm;
-                }
-
                 roundHMMs.add(hmm);
 
                 double[] stateDist = hmm.getCurrentStateDistribution(o);
@@ -71,13 +66,10 @@ class Player {
                         bestBirdProb = nextEmission[i];
                         bestAction = i;
                         bestBird = b;
-                        bestHMM = hmm;
                     }
                 }
             }
         }
-
-        speciesHMM.add(bestHMM);
  
         double shootProb = 0.7;
 
