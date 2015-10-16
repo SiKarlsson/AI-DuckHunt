@@ -36,9 +36,7 @@ class Player {
         int bestBird = 0; // What bird should we shoot?
         double bestBirdProb = 0; // ... and what prob that we hit?
         int bestAction = -1; // Don't shoot if no good action has been found
-        HMM bestHMM = null;
-
-        LinkedList<HMM> roundHMMs = new LinkedList<HMM>();
+        HMM bestHMM = new HMM(numOfStates, Constants.COUNT_MOVE);
 
         for (int b = 0; b < numOfBirds; b++) {
             Bird bird = pState.getBird(b);
@@ -47,8 +45,11 @@ class Player {
                 HMM hmm = new HMM(numOfStates, Constants.COUNT_MOVE);
 
                 if (speciesHMM.size() > 0) {
-                    if (speciesHMM.getLast() != null)
+                    if (speciesHMM.getLast() != null) {
                         hmm.copyHMM(speciesHMM.getLast());
+                    } else {
+                        System.err.printf("null detected: size: %d, bird: %d\n", speciesHMM.size(), b);
+                    }
                 }
 
                 // Observations
@@ -56,11 +57,9 @@ class Player {
 
                 hmm.estimateModel(o);
 
-                if (b == 0) {
+                if (bestHMM == null) {
                     bestHMM = hmm;
                 }
-
-                roundHMMs.add(hmm);
 
                 double[] stateDist = hmm.getCurrentStateDistribution(o);
 
@@ -78,12 +77,12 @@ class Player {
         }
 
         speciesHMM.add(bestHMM);
- 
+
         double shootProb = 0.7;
 
         if (bestBirdProb > shootProb && pState.getBird(bestBird).getSeqLength() > t) {
             System.err.printf("Shooting bird (Action: %d) %d with prob %.5f at time %d\n", 
-                bestAction, bestBird, bestBirdProb, t);
+                bestAction, bestBird, bestBirdProb, t); 
             return new Action(bestBird, bestAction);
         } else {
             return cDontShoot;

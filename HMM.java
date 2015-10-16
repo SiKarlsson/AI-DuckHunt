@@ -10,7 +10,7 @@ import java.lang.Math;
  * We recommend that you read the article as an introduction to HMMs.
  */
 public class HMM {
-  static final int maxIters = 300; // Max iterations when estimating a new model.
+  static final int maxIters = 100; // Max iterations when estimating a new model.
   
   final int numberOfStates; // The number of states in the HMM.
   final int numberOfEmissions; // The number of emissions in the HMM.
@@ -113,7 +113,6 @@ public class HMM {
   }
 
   double[] getCurrentStateDistribution(int[] O) {
-    /* DET HÄR ÄR FEL, MÅSTE TA HÄNSYN TILL OBSERVATIONERNA */
     double[][][] xi = new double[O.length][numberOfStates][numberOfStates];
     double[][] alpha = new double[O.length][numberOfStates];
     double[][] beta = new double[O.length][numberOfStates];
@@ -443,8 +442,11 @@ public class HMM {
       }
       for (int i = 0; i < numberOfStates; ++i) {
         gamma[O.length-1][i] = 0.0;
-        if (denom != 0) 
+        if (denom != 0) {
           gamma[O.length-1][i] += (alpha[O.length-1][i]*beta[O.length-1][i])/denom;
+        } else {
+          gamma[O.length-1][i] = 0;
+        }
       }
       
       /* Re-estimate A,B and pi */
