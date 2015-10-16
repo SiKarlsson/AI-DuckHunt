@@ -29,9 +29,10 @@ class Player {
          * Here you should write your clever algorithms to get the best action.
          * This skeleton never shoots.
          */
-        int numOfBirds = pState.getNumBirds();
         int numOfStates = 5;
-        int t = 95 - numOfBirds; // When to start shooting
+        int numOfEmissions = Constants.COUNT_MOVE;
+        int numOfBirds = pState.getNumBirds();
+        int t = 60; // When to start check the observations
 
         int bestBird = 0; // What bird should we shoot?
         double bestBirdProb = 0; // ... and what prob that we hit?
@@ -42,7 +43,7 @@ class Player {
             Bird bird = pState.getBird(b);
             if (bird.isAlive() && bird.getSeqLength() > t) {
 
-                HMM hmm = new HMM(numOfStates, Constants.COUNT_MOVE);
+                HMM hmm = new HMM(numOfStates, numOfEmissions);
 
                 if (speciesHMM.size() > 0) {
                     if (speciesHMM.getLast() != null) {
@@ -70,7 +71,6 @@ class Player {
                         bestBirdProb = nextEmission[i];
                         bestAction = i;
                         bestBird = b;
-                        bestHMM = hmm;
                     }
                 }
             }
